@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Clienti - Con Riconoscimento Vocale e Modifica</title>
+    <title>Gestione Clienti - Con Riconoscimento Vocale Migliorato</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; }
@@ -73,21 +73,42 @@
         }
 
         function processVoiceInput(transcript) {
-            updateStatus("Riconosciuto: " + transcript);
-            if (transcript.includes("nome") || transcript.includes("cliente")) {
-                document.getElementById('nome').focus();
-            } else if (transcript.includes("prodotto")) {
-                document.getElementById('prodotto').focus();
-            } else if (transcript.includes("città")) {
-                document.getElementById('citta').focus();
-            } else {
-                const focusedElement = document.activeElement;
-                if (focusedElement && focusedElement.tagName === 'INPUT') {
-                    focusedElement.value = transcript;
-                    updateStatus("Inserito: " + transcript + " in " + focusedElement.id);
-                } else {
-                    updateStatus("Non so dove inserire: " + transcript);
+            updateStatus("Analisi del messaggio vocale...");
+            
+            const paroleChiave = ['nome', 'prodotto', 'città'];
+            let dati = {};
+            let campoCorrente = null;
+            
+            // Dividi il transcript in parole
+            const parole = transcript.split(' ');
+            
+            for (let i = 0; i < parole.length; i++) {
+                const parola = parole[i].toLowerCase();
+                
+                // Controlla se la parola è una parola chiave
+                if (paroleChiave.includes(parola)) {
+                    campoCorrente = parola === 'città' ? 'citta' : parola;
+                    dati[campoCorrente] = '';
+                } else if (campoCorrente) {
+                    // Aggiungi la parola al campo corrente
+                    dati[campoCorrente] += (dati[campoCorrente] ? ' ' : '') + parole[i];
                 }
+            }
+
+            // Rimuovi eventuali spazi extra e virgole alla fine
+            for (let campo in dati) {
+                dati[campo] = dati[campo].trim().replace(/,$/, '');
+            }
+
+            if (Object.keys(dati).length > 0) {
+                for (let [campo, valore] of Object.entries(dati)) {
+                    if (valore) {
+                        document.getElementById(campo).value = valore;
+                    }
+                }
+                updateStatus("Campi compilati automaticamente.");
+            } else {
+                updateStatus("Non ho potuto estrarre informazioni dal messaggio vocale.");
             }
         }
 
@@ -104,7 +125,7 @@
                 recognition.start();
                 isListening = true;
                 document.getElementById('micButton').classList.add('listening');
-                updateStatus("Ascolto attivo. Pronuncia 'nome', 'prodotto' o 'città'");
+                updateStatus("Ascolto attivo. Pronuncia le informazioni del cliente.");
             }
         }
 
