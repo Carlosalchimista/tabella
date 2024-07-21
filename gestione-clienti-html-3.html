@@ -5,18 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestione Clienti - Versione Compatibile Mobile con Inserimento Vocale e Modifica</title>
     <style>
-        /* ... (stili esistenti) ... */
-        .edit-btn, .save-btn, .cancel-btn {
-            background-color: #008CBA;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
-            cursor: pointer;
-            margin-right: 5px;
-        }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f0f0f0; }
+        .container { background-color: white; border: 1px solid #ccc; border-radius: 5px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1 { color: #1e6f9f; margin-top: 0; }
+        .input-row { display: flex; flex-direction: column; margin-bottom: 10px; }
+        .input-row input, .input-row button { margin-bottom: 5px; padding: 10px; border: 1px solid #ccc; border-radius: 3px; }
+        .input-row button { background-color: #1e6f9f; color: white; border: none; cursor: pointer; -webkit-appearance: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .delete-btn, .edit-btn, .save-btn, .cancel-btn { color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; margin-right: 5px; }
+        .delete-btn { background-color: #ff4d4d; }
+        .edit-btn { background-color: #008CBA; }
         .save-btn { background-color: #4CAF50; }
         .cancel-btn { background-color: #f44336; }
+        #statusMessage { margin-top: 10px; font-style: italic; }
+        #debugInfo { margin-top: 20px; border: 1px solid #ccc; padding: 10px; background-color: #f9f9f9; }
+        .mic-button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .listening {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { background-color: #4CAF50; }
+            50% { background-color: #45a049; }
+            100% { background-color: #4CAF50; }
+        }
         .editing input {
             width: 90%;
             padding: 5px;
@@ -27,11 +52,118 @@
 <body>
     <div class="container">
         <h1>Gestione Clienti - Compatibile Mobile con Inserimento Vocale e Modifica</h1>
-        <!-- ... (resto del HTML esistente) ... -->
+        <div class="input-row">
+            <input type="text" id="nome" placeholder="Nome">
+            <input type="text" id="prodotto" placeholder="Prodotto">
+            <input type="text" id="citta" placeholder="Città">
+            <button id="aggiungiButton">Aggiungi Cliente</button>
+            <button id="micButton" class="mic-button">🎤 Inserimento Vocale</button>
+        </div>
+        <div id="statusMessage"></div>
+        <table id="clientiTable">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Prodotto</th>
+                    <th>Città</th>
+                    <th>Azione</th>
+                </tr>
+            </thead>
+            <tbody id="clientiBody"></tbody>
+        </table>
+        <div id="debugInfo"></div>
     </div>
 
     <script>
-        // ... (codice esistente) ...
+        var clienti = [];
+        var recognition;
+        var currentField = '';
+
+        function initSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window) {
+                recognition = new webkitSpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.lang = 'it-IT';
+
+                recognition.onresult = function(event) {
+                    var result = event.results[event.results.length - 1];
+                    if (result.isFinal) {
+                        var transcript = result[0].transcript.toLowerCase().trim();
+                        processVoiceInput(transcript);
+                    }
+                };
+
+                recognition.onerror = function(event) {
+                    console.error("Errore nel riconoscimento vocale: ", event.error);
+                    updateStatus("Errore nel riconoscimento vocale. Riprova.");
+                    stopListening();
+                };
+            } else {
+                console.error("Il riconoscimento vocale non è supportato in questo browser.");
+                updateStatus("Il riconoscimento vocale non è supportato in questo browser.");
+            }
+        }
+
+        function processVoiceInput(transcript) {
+            if (transcript.includes("cliente")) {
+                currentField = 'nome';
+                updateStatus("Pronuncia il nome del cliente");
+            } else if (transcript.includes("prodotto")) {
+                currentField = 'prodotto';
+                updateStatus("Pronuncia il nome del prodotto");
+            } else if (transcript.includes("città")) {
+                currentField = 'citta';
+                updateStatus("Pronuncia il nome della città");
+            } else if (currentField) {
+                document.getElementById(currentField).value = transcript;
+                updateStatus("Inserito: " + transcript + " per " + currentField);
+                currentField = '';
+            }
+        }
+
+        function startListening() {
+            if (recognition) {
+                recognition.start();
+                document.getElementById('micButton').classList.add('listening');
+                updateStatus("In ascolto... Pronuncia 'cliente', 'prodotto' o 'città'");
+            }
+        }
+
+        function stopListening() {
+            if (recognition) {
+                recognition.stop();
+                document.getElementById('micButton').classList.remove('listening');
+                updateStatus("Ascolto terminato");
+            }
+        }
+
+        function aggiungiCliente() {
+            debugLog("Funzione aggiungiCliente chiamata");
+            var nome = document.getElementById('nome').value;
+            var prodotto = document.getElementById('prodotto').value;
+            var citta = document.getElementById('citta').value;
+            
+            if (nome && prodotto && citta) {
+                clienti.push({nome: nome, prodotto: prodotto, citta: citta});
+                aggiornaTabella();
+                pulisciCampi();
+                salvaDati();
+                updateStatus("Cliente aggiunto con successo!");
+                debugLog("Cliente aggiunto: " + JSON.stringify({nome: nome, prodotto: prodotto, citta: citta}));
+            } else {
+                updateStatus("Per favore, compila tutti i campi.");
+                debugLog("Campi mancanti: " + JSON.stringify({nome: nome, prodotto: prodotto, citta: citta}));
+            }
+        }
+
+        function rimuoviCliente(index) {
+            debugLog("Rimozione cliente all'indice: " + index);
+            clienti.splice(index, 1);
+            aggiornaTabella();
+            salvaDati();
+            updateStatus("Cliente rimosso con successo!");
+        }
 
         function aggiornaTabella() {
             debugLog("Aggiornamento tabella");
@@ -86,10 +218,75 @@
             updateStatus("Modifiche annullate.");
         }
 
-        // ... (resto del codice esistente) ...
+        function pulisciCampi() {
+            document.getElementById('nome').value = '';
+            document.getElementById('prodotto').value = '';
+            document.getElementById('citta').value = '';
+        }
+
+        function updateStatus(message) {
+            document.getElementById('statusMessage').textContent = message;
+            debugLog("Status aggiornato: " + message);
+        }
+
+        function salvaDati() {
+            localStorage.setItem('clienti', JSON.stringify(clienti));
+            debugLog("Dati salvati in localStorage");
+        }
+
+        function caricaDati() {
+            var datiSalvati = localStorage.getItem('clienti');
+            if (datiSalvati) {
+                clienti = JSON.parse(datiSalvati);
+                aggiornaTabella();
+                debugLog("Dati caricati da localStorage");
+            } else {
+                debugLog("Nessun dato trovato in localStorage");
+            }
+        }
+
+        function debugLog(message) {
+            console.log(message);
+            var debugInfo = document.getElementById('debugInfo');
+            debugInfo.innerHTML += message + '<br>';
+        }
+
+        function addClickHandler(element, handler) {
+            element.addEventListener('click', handler);
+            element.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                handler(e);
+            });
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // ... (codice esistente) ...
+            debugLog("DOM caricato");
+            caricaDati();
+            initSpeechRecognition();
+            
+            var aggiungiButton = document.getElementById('aggiungiButton');
+            var micButton = document.getElementById('micButton');
+            
+            if (aggiungiButton) {
+                addClickHandler(aggiungiButton, aggiungiCliente);
+                debugLog("Event listeners aggiunti al bottone Aggiungi");
+            } else {
+                debugLog("Bottone Aggiungi non trovato!");
+            }
+
+            if (micButton) {
+                addClickHandler(micButton, function() {
+                    if (recognition && recognition.active) {
+                        stopListening();
+                    } else {
+                        startListening();
+                    }
+                });
+                debugLog("Event listeners aggiunti al bottone Microfono");
+            } else {
+                debugLog("Bottone Microfono non trovato!");
+            }
+
             aggiornaTabella(); // Assicuriamoci che la tabella sia aggiornata all'avvio
         });
     </script>
