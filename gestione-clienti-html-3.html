@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestione Clienti - Moderna</title>
     <style>
+        /* Stili CSS */
         :root {
             --primary-color: #4a90e2;
             --secondary-color: #f5a623;
@@ -122,6 +123,7 @@
         <div class="input-group">
             <button id="aggiungiButton">Aggiungi Cliente</button>
             <button id="micButton">🎤 Attiva/Disattiva Vocale</button>
+            <button id="copiaButton">Copia negli appunti</button> <!-- Aggiungi il pulsante "Copia negli appunti" -->
         </div>
         <div id="statusMessage"></div>
         <table>
@@ -138,7 +140,6 @@
     </div>
 
     <script>
-        // Lo script JavaScript rimane lo stesso del codice precedente
         let clienti = [];
         let recognition;
         let isListening = false;
@@ -313,10 +314,27 @@
             document.getElementById('statusMessage').textContent = message;
         }
 
+        function copiaNegliAppunti() {
+            let tabella = document.querySelector('table');
+            let righe = Array.from(tabella.rows);
+            let testoDaCopiare = righe.map(riga => {
+                let celle = Array.from(riga.cells);
+                return celle.map(cell => cell.innerText).join('\t');
+            }).join('\n');
+
+            navigator.clipboard.writeText(testoDaCopiare).then(() => {
+                updateStatus("Dati copiati negli appunti!");
+            }).catch(err => {
+                console.error("Errore durante la copia negli appunti: ", err);
+                updateStatus("Errore durante la copia negli appunti.");
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             initSpeechRecognition();
             document.getElementById('aggiungiButton').addEventListener('click', aggiungiCliente);
             document.getElementById('micButton').addEventListener('click', toggleListening);
+            document.getElementById('copiaButton').addEventListener('click', copiaNegliAppunti); // Aggiungi l'evento click per il pulsante "Copia negli appunti"
             aggiornaTabella();
         });
     </script>
