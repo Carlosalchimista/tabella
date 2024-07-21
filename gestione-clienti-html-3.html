@@ -3,115 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Clienti - Moderna con Esportazione</title>
+    <title>Gestione Clienti - Moderna con Copia negli Appunti</title>
     <style>
-        :root {
-            --primary-color: #4a90e2;
-            --secondary-color: #f5a623;
-            --background-color: #f0f4f8;
-            --text-color: #333;
-            --border-radius: 8px;
-        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
             margin: 0;
-            padding: 0;
-            background-color: var(--background-color);
-            color: var(--text-color);
+            padding: 20px;
         }
         .container {
             max-width: 800px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background-color: white;
-            border-radius: var(--border-radius);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
         h1 {
-            color: var(--primary-color);
+            color: #2c3e50;
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 20px;
         }
         .input-group {
             display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 1rem;
+            gap: 10px;
+            margin-bottom: 20px;
         }
-        input {
+        input[type="text"] {
             flex: 1;
-            padding: 0.75rem;
+            padding: 10px;
             border: 1px solid #ddd;
-            border-radius: var(--border-radius);
-            font-size: 1rem;
+            border-radius: 4px;
+            font-size: 16px;
         }
         button {
-            padding: 0.75rem 1.5rem;
+            padding: 10px 15px;
             border: none;
-            border-radius: var(--border-radius);
-            font-size: 1rem;
+            border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.3s, transform 0.1s;
-        }
-        button:active {
-            transform: translateY(1px);
+            font-size: 16px;
+            transition: background-color 0.3s ease;
         }
         #aggiungiButton {
-            background-color: var(--primary-color);
+            background-color: #3498db;
             color: white;
         }
         #micButton {
-            background-color: var(--secondary-color);
+            background-color: #e74c3c;
             color: white;
         }
-        #micButton.listening {
-            background-color: #e74c3c;
-        }
-        #esportaButton {
+        #copiaButton {
             background-color: #27ae60;
             color: white;
         }
+        button:hover {
+            opacity: 0.9;
+        }
         #statusMessage {
-            margin-top: 1rem;
-            padding: 0.5rem;
-            background-color: #e8f5e9;
-            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f39c12;
+            color: white;
             text-align: center;
+            display: none;
         }
         table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            margin-top: 2rem;
+            border-collapse: collapse;
+            margin-top: 20px;
         }
         th, td {
-            padding: 1rem;
+            padding: 12px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
         th {
-            background-color: var(--primary-color);
+            background-color: #2c3e50;
             color: white;
         }
-        th:first-child {
-            border-top-left-radius: var(--border-radius);
+        tr:hover {
+            background-color: #f5f5f5;
         }
-        th:last-child {
-            border-top-right-radius: var(--border-radius);
-        }
-        tr:last-child td:first-child {
-            border-bottom-left-radius: var(--border-radius);
-        }
-        tr:last-child td:last-child {
-            border-bottom-right-radius: var(--border-radius);
-        }
-        .edit-btn, .save-btn {
-            background-color: var(--primary-color);
-            color: white;
-        }
-        .cancel-btn {
+        .delete-btn {
             background-color: #e74c3c;
             color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        @media (max-width: 600px) {
+            .input-group {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -126,7 +113,7 @@
         <div class="input-group">
             <button id="aggiungiButton">Aggiungi Cliente</button>
             <button id="micButton">🎤 Attiva/Disattiva Vocale</button>
-            <button id="esportaButton">Esporta Dati</button>
+            <button id="copiaButton">Copia Dati</button>
         </div>
         <div id="statusMessage"></div>
         <table>
@@ -141,93 +128,140 @@
             <tbody id="clientiBody"></tbody>
         </table>
     </div>
-
     <script>
         let clienti = [];
         let recognition;
         let isListening = false;
 
         function initSpeechRecognition() {
-            // ... (il codice per il riconoscimento vocale rimane invariato)
-        }
+            if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.lang = 'it-IT';
+                recognition.continuous = true;
+                recognition.interimResults = true;
 
-        function processVoiceInput(transcript) {
-            // ... (il codice per l'elaborazione dell'input vocale rimane invariato)
+                recognition.onresult = function(event) {
+                    const result = event.results[event.results.length - 1];
+                    if (result.isFinal) {
+                        const transcript = result[0].transcript.trim().toLowerCase();
+                        processVoiceCommand(transcript);
+                    }
+                };
+
+                recognition.onerror = function(event) {
+                    console.error('Errore nel riconoscimento vocale:', event.error);
+                    updateStatus("Errore nel riconoscimento vocale. Riprova.");
+                };
+            } else {
+                console.error('Il riconoscimento vocale non è supportato in questo browser.');
+                updateStatus("Il riconoscimento vocale non è supportato in questo browser.");
+            }
         }
 
         function toggleListening() {
-            // ... (il codice per attivare/disattivare l'ascolto rimane invariato)
+            if (isListening) {
+                recognition.stop();
+                isListening = false;
+                updateStatus("Riconoscimento vocale disattivato");
+            } else {
+                recognition.start();
+                isListening = true;
+                updateStatus("In ascolto... Pronuncia un comando");
+            }
         }
 
-        function startListening() {
-            // ... (il codice per iniziare l'ascolto rimane invariato)
+        function processVoiceCommand(command) {
+            if (command.includes('aggiungi')) {
+                const parts = command.split(' ');
+                if (parts.length >= 4) {
+                    const nome = parts[1];
+                    const prodotto = parts[2];
+                    const citta = parts.slice(3).join(' ');
+                    aggiungiCliente(nome, prodotto, citta);
+                    updateStatus(`Cliente aggiunto: ${nome}, ${prodotto}, ${citta}`);
+                } else {
+                    updateStatus("Comando non valido. Usa il formato: aggiungi [nome] [prodotto] [città]");
+                }
+            } else {
+                updateStatus("Comando non riconosciuto");
+            }
         }
 
-        function stopListening() {
-            // ... (il codice per terminare l'ascolto rimane invariato)
-        }
+        function aggiungiCliente(nome, prodotto, citta) {
+            nome = nome || document.getElementById('nome').value;
+            prodotto = prodotto || document.getElementById('prodotto').value;
+            citta = citta || document.getElementById('citta').value;
 
-        function aggiungiCliente() {
-            // ... (il codice per aggiungere un cliente rimane invariato)
-        }
-
-        function aggiornaTabella() {
-            // ... (il codice per aggiornare la tabella rimane invariato)
+            if (nome && prodotto && citta) {
+                clienti.push({ nome, prodotto, citta });
+                aggiornaTabella();
+                clearInputs();
+                updateStatus("Cliente aggiunto con successo!");
+            } else {
+                updateStatus("Per favore, compila tutti i campi.");
+            }
         }
 
         function rimuoviCliente(index) {
-            // ... (il codice per rimuovere un cliente rimane invariato)
+            clienti.splice(index, 1);
+            aggiornaTabella();
+            updateStatus("Cliente rimosso con successo!");
         }
 
-        function modificaCliente(index) {
-            // ... (il codice per modificare un cliente rimane invariato)
+        function aggiornaTabella() {
+            const tbody = document.getElementById('clientiBody');
+            tbody.innerHTML = '';
+            clienti.forEach((cliente, index) => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = cliente.nome;
+                row.insertCell(1).textContent = cliente.prodotto;
+                row.insertCell(2).textContent = cliente.citta;
+                const actionCell = row.insertCell(3);
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Elimina';
+                deleteButton.className = 'delete-btn';
+                deleteButton.onclick = () => rimuoviCliente(index);
+                actionCell.appendChild(deleteButton);
+            });
         }
 
-        function salvaModifiche(index) {
-            // ... (il codice per salvare le modifiche rimane invariato)
-        }
-
-        function annullaModifiche() {
-            // ... (il codice per annullare le modifiche rimane invariato)
-        }
-
-        function pulisciCampi() {
-            // ... (il codice per pulire i campi rimane invariato)
+        function clearInputs() {
+            document.getElementById('nome').value = '';
+            document.getElementById('prodotto').value = '';
+            document.getElementById('citta').value = '';
         }
 
         function updateStatus(message) {
-            // ... (il codice per aggiornare lo stato rimane invariato)
+            const statusElement = document.getElementById('statusMessage');
+            statusElement.textContent = message;
+            statusElement.style.display = 'block';
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 3000);
         }
 
-        function esportaDati() {
+        function copiaDati() {
             if (clienti.length === 0) {
-                updateStatus("Non ci sono dati da esportare.");
+                updateStatus("Non ci sono dati da copiare.");
                 return;
             }
-
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Nome,Prodotto,Città\n";
-
+            let testo = "Nome\tProdotto\tCittà\n";
             clienti.forEach(cliente => {
-                csvContent += `${cliente.nome},${cliente.prodotto},${cliente.citta}\n`;
+                testo += `${cliente.nome}\t${cliente.prodotto}\t${cliente.citta}\n`;
             });
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "clienti.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            updateStatus("Dati esportati con successo!");
+            navigator.clipboard.writeText(testo).then(() => {
+                updateStatus("Dati copiati negli appunti! Ora puoi incollarli in Excel o Google Sheets.");
+            }, (err) => {
+                console.error('Errore nella copia dei dati: ', err);
+                updateStatus("Si è verificato un errore durante la copia dei dati.");
+            });
         }
 
         document.addEventListener('DOMContentLoaded', function() {
             initSpeechRecognition();
-            document.getElementById('aggiungiButton').addEventListener('click', aggiungiCliente);
+            document.getElementById('aggiungiButton').addEventListener('click', () => aggiungiCliente());
             document.getElementById('micButton').addEventListener('click', toggleListening);
-            document.getElementById('esportaButton').addEventListener('click', esportaDati);
+            document.getElementById('copiaButton').addEventListener('click', copiaDati);
             aggiornaTabella();
         });
     </script>
