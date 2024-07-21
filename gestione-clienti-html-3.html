@@ -3,101 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Clienti - Versione Compatibile Mobile con Inserimento Vocale e Modifica</title>
+    <title>Gestione Clienti - Con Riconoscimento Vocale e Modifica</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f0f0f0; }
-        .container { background-color: white; border: 1px solid #ccc; border-radius: 5px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h1 { color: #1e6f9f; margin-top: 0; }
-        .input-row { display: flex; flex-direction: column; margin-bottom: 10px; }
-        .input-row input, .input-row button { margin-bottom: 5px; padding: 10px; border: 1px solid #ccc; border-radius: 3px; }
-        .input-row button { background-color: #1e6f9f; color: white; border: none; cursor: pointer; -webkit-appearance: none; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        input, button { margin: 5px; padding: 5px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .delete-btn, .edit-btn, .save-btn, .cancel-btn { color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; margin-right: 5px; }
-        .delete-btn { background-color: #ff4d4d; }
-        .edit-btn { background-color: #008CBA; }
-        .save-btn { background-color: #4CAF50; }
-        .cancel-btn { background-color: #f44336; }
         #statusMessage { margin-top: 10px; font-style: italic; }
-        #debugInfo { margin-top: 20px; border: 1px solid #ccc; padding: 10px; background-color: #f9f9f9; }
-        .mic-button {
-            background-color: #4CAF50;
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        .listening {
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0% { background-color: #4CAF50; }
-            50% { background-color: #45a049; }
-            100% { background-color: #4CAF50; }
-        }
-        .editing input {
-            width: 90%;
-            padding: 5px;
-            margin: 2px 0;
-        }
+        .mic-button { background-color: #4CAF50; color: white; border: none; padding: 10px; cursor: pointer; }
+        .mic-button.listening { background-color: #f44336; }
+        .edit-btn, .save-btn, .cancel-btn { margin-right: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Gestione Clienti - Compatibile Mobile con Inserimento Vocale e Modifica</h1>
-        <div class="input-row">
+        <h1>Gestione Clienti</h1>
+        <div>
             <input type="text" id="nome" placeholder="Nome">
             <input type="text" id="prodotto" placeholder="Prodotto">
             <input type="text" id="citta" placeholder="Città">
             <button id="aggiungiButton">Aggiungi Cliente</button>
-            <button id="micButton" class="mic-button">🎤 Inserimento Vocale</button>
+            <button id="micButton" class="mic-button">🎤 Attiva/Disattiva Vocale</button>
         </div>
         <div id="statusMessage"></div>
-        <table id="clientiTable">
+        <table>
             <thead>
                 <tr>
                     <th>Nome</th>
                     <th>Prodotto</th>
                     <th>Città</th>
-                    <th>Azione</th>
+                    <th>Azioni</th>
                 </tr>
             </thead>
             <tbody id="clientiBody"></tbody>
         </table>
-        <div id="debugInfo"></div>
     </div>
 
     <script>
-        var clienti = [];
-        var recognition;
-        var currentField = '';
+        let clienti = [];
+        let recognition;
+        let isListening = false;
 
         function initSpeechRecognition() {
             if ('webkitSpeechRecognition' in window) {
                 recognition = new webkitSpeechRecognition();
-                recognition.continuous = true;
-                recognition.interimResults = true;
+                recognition.continuous = false;
+                recognition.interimResults = false;
                 recognition.lang = 'it-IT';
 
                 recognition.onresult = function(event) {
-                    var result = event.results[event.results.length - 1];
-                    if (result.isFinal) {
-                        var transcript = result[0].transcript.toLowerCase().trim();
-                        processVoiceInput(transcript);
-                    }
+                    const transcript = event.results[0][0].transcript.toLowerCase().trim();
+                    processVoiceInput(transcript);
                 };
 
                 recognition.onerror = function(event) {
                     console.error("Errore nel riconoscimento vocale: ", event.error);
                     updateStatus("Errore nel riconoscimento vocale. Riprova.");
                     stopListening();
+                };
+
+                recognition.onend = function() {
+                    if (isListening) startListening();
                 };
             } else {
                 console.error("Il riconoscimento vocale non è supportato in questo browser.");
@@ -106,114 +73,117 @@
         }
 
         function processVoiceInput(transcript) {
-            if (transcript.includes("cliente")) {
-                currentField = 'nome';
-                updateStatus("Pronuncia il nome del cliente");
+            updateStatus("Riconosciuto: " + transcript);
+            if (transcript.includes("nome") || transcript.includes("cliente")) {
+                document.getElementById('nome').focus();
             } else if (transcript.includes("prodotto")) {
-                currentField = 'prodotto';
-                updateStatus("Pronuncia il nome del prodotto");
+                document.getElementById('prodotto').focus();
             } else if (transcript.includes("città")) {
-                currentField = 'citta';
-                updateStatus("Pronuncia il nome della città");
-            } else if (currentField) {
-                document.getElementById(currentField).value = transcript;
-                updateStatus("Inserito: " + transcript + " per " + currentField);
-                currentField = '';
+                document.getElementById('citta').focus();
+            } else {
+                const focusedElement = document.activeElement;
+                if (focusedElement && focusedElement.tagName === 'INPUT') {
+                    focusedElement.value = transcript;
+                    updateStatus("Inserito: " + transcript + " in " + focusedElement.id);
+                } else {
+                    updateStatus("Non so dove inserire: " + transcript);
+                }
+            }
+        }
+
+        function toggleListening() {
+            if (isListening) {
+                stopListening();
+            } else {
+                startListening();
             }
         }
 
         function startListening() {
             if (recognition) {
                 recognition.start();
+                isListening = true;
                 document.getElementById('micButton').classList.add('listening');
-                updateStatus("In ascolto... Pronuncia 'cliente', 'prodotto' o 'città'");
+                updateStatus("Ascolto attivo. Pronuncia 'nome', 'prodotto' o 'città'");
             }
         }
 
         function stopListening() {
             if (recognition) {
                 recognition.stop();
+                isListening = false;
                 document.getElementById('micButton').classList.remove('listening');
                 updateStatus("Ascolto terminato");
             }
         }
 
         function aggiungiCliente() {
-            debugLog("Funzione aggiungiCliente chiamata");
-            var nome = document.getElementById('nome').value;
-            var prodotto = document.getElementById('prodotto').value;
-            var citta = document.getElementById('citta').value;
+            const nome = document.getElementById('nome').value;
+            const prodotto = document.getElementById('prodotto').value;
+            const citta = document.getElementById('citta').value;
             
             if (nome && prodotto && citta) {
-                clienti.push({nome: nome, prodotto: prodotto, citta: citta});
+                clienti.push({nome, prodotto, citta});
                 aggiornaTabella();
                 pulisciCampi();
-                salvaDati();
                 updateStatus("Cliente aggiunto con successo!");
-                debugLog("Cliente aggiunto: " + JSON.stringify({nome: nome, prodotto: prodotto, citta: citta}));
             } else {
                 updateStatus("Per favore, compila tutti i campi.");
-                debugLog("Campi mancanti: " + JSON.stringify({nome: nome, prodotto: prodotto, citta: citta}));
             }
         }
 
-        function rimuoviCliente(index) {
-            debugLog("Rimozione cliente all'indice: " + index);
-            clienti.splice(index, 1);
-            aggiornaTabella();
-            salvaDati();
-            updateStatus("Cliente rimosso con successo!");
-        }
-
         function aggiornaTabella() {
-            debugLog("Aggiornamento tabella");
-            var tbody = document.getElementById('clientiBody');
+            const tbody = document.getElementById('clientiBody');
             tbody.innerHTML = '';
-            clienti.forEach(function(cliente, index) {
-                var row = tbody.insertRow();
+            clienti.forEach((cliente, index) => {
+                const row = tbody.insertRow();
                 row.innerHTML = `
                     <td>${cliente.nome}</td>
                     <td>${cliente.prodotto}</td>
                     <td>${cliente.citta}</td>
                     <td>
                         <button class="edit-btn" onclick="modificaCliente(${index})">Modifica</button>
-                        <button class="delete-btn" onclick="rimuoviCliente(${index})">Elimina</button>
+                        <button onclick="rimuoviCliente(${index})">Elimina</button>
                     </td>
                 `;
             });
         }
 
+        function rimuoviCliente(index) {
+            clienti.splice(index, 1);
+            aggiornaTabella();
+            updateStatus("Cliente rimosso con successo!");
+        }
+
         function modificaCliente(index) {
-            var row = document.getElementById('clientiBody').rows[index];
-            var cliente = clienti[index];
+            const row = document.getElementById('clientiBody').rows[index];
+            const cliente = clienti[index];
             row.innerHTML = `
-                <td><input type="text" value="${cliente.nome}" id="edit-nome-${index}"></td>
-                <td><input type="text" value="${cliente.prodotto}" id="edit-prodotto-${index}"></td>
-                <td><input type="text" value="${cliente.citta}" id="edit-citta-${index}"></td>
+                <td><input type="text" id="edit-nome-${index}" value="${cliente.nome}"></td>
+                <td><input type="text" id="edit-prodotto-${index}" value="${cliente.prodotto}"></td>
+                <td><input type="text" id="edit-citta-${index}" value="${cliente.citta}"></td>
                 <td>
                     <button class="save-btn" onclick="salvaModifiche(${index})">Salva</button>
-                    <button class="cancel-btn" onclick="annullaModifiche(${index})">Annulla</button>
+                    <button class="cancel-btn" onclick="annullaModifiche()">Annulla</button>
                 </td>
             `;
-            row.classList.add('editing');
         }
 
         function salvaModifiche(index) {
-            var nome = document.getElementById(`edit-nome-${index}`).value;
-            var prodotto = document.getElementById(`edit-prodotto-${index}`).value;
-            var citta = document.getElementById(`edit-citta-${index}`).value;
-
+            const nome = document.getElementById(`edit-nome-${index}`).value;
+            const prodotto = document.getElementById(`edit-prodotto-${index}`).value;
+            const citta = document.getElementById(`edit-citta-${index}`).value;
+            
             if (nome && prodotto && citta) {
-                clienti[index] = { nome: nome, prodotto: prodotto, citta: citta };
+                clienti[index] = {nome, prodotto, citta};
                 aggiornaTabella();
-                salvaDati();
                 updateStatus("Cliente modificato con successo!");
             } else {
                 updateStatus("Per favore, compila tutti i campi.");
             }
         }
 
-        function annullaModifiche(index) {
+        function annullaModifiche() {
             aggiornaTabella();
             updateStatus("Modifiche annullate.");
         }
@@ -226,68 +196,13 @@
 
         function updateStatus(message) {
             document.getElementById('statusMessage').textContent = message;
-            debugLog("Status aggiornato: " + message);
-        }
-
-        function salvaDati() {
-            localStorage.setItem('clienti', JSON.stringify(clienti));
-            debugLog("Dati salvati in localStorage");
-        }
-
-        function caricaDati() {
-            var datiSalvati = localStorage.getItem('clienti');
-            if (datiSalvati) {
-                clienti = JSON.parse(datiSalvati);
-                aggiornaTabella();
-                debugLog("Dati caricati da localStorage");
-            } else {
-                debugLog("Nessun dato trovato in localStorage");
-            }
-        }
-
-        function debugLog(message) {
-            console.log(message);
-            var debugInfo = document.getElementById('debugInfo');
-            debugInfo.innerHTML += message + '<br>';
-        }
-
-        function addClickHandler(element, handler) {
-            element.addEventListener('click', handler);
-            element.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                handler(e);
-            });
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            debugLog("DOM caricato");
-            caricaDati();
             initSpeechRecognition();
-            
-            var aggiungiButton = document.getElementById('aggiungiButton');
-            var micButton = document.getElementById('micButton');
-            
-            if (aggiungiButton) {
-                addClickHandler(aggiungiButton, aggiungiCliente);
-                debugLog("Event listeners aggiunti al bottone Aggiungi");
-            } else {
-                debugLog("Bottone Aggiungi non trovato!");
-            }
-
-            if (micButton) {
-                addClickHandler(micButton, function() {
-                    if (recognition && recognition.active) {
-                        stopListening();
-                    } else {
-                        startListening();
-                    }
-                });
-                debugLog("Event listeners aggiunti al bottone Microfono");
-            } else {
-                debugLog("Bottone Microfono non trovato!");
-            }
-
-            aggiornaTabella(); // Assicuriamoci che la tabella sia aggiornata all'avvio
+            document.getElementById('aggiungiButton').addEventListener('click', aggiungiCliente);
+            document.getElementById('micButton').addEventListener('click', toggleListening);
+            aggiornaTabella();
         });
     </script>
 </body>
