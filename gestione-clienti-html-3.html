@@ -3,28 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Clienti - Con Riconoscimento Vocale Migliorato</title>
+    <title>Gestione Clienti - Moderna</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        input, button { margin: 5px; padding: 5px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        #statusMessage { margin-top: 10px; font-style: italic; }
-        .mic-button { background-color: #4CAF50; color: white; border: none; padding: 10px; cursor: pointer; }
-        .mic-button.listening { background-color: #f44336; }
-        .edit-btn, .save-btn, .cancel-btn { margin-right: 5px; }
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5a623;
+            --background-color: #f0f4f8;
+            --text-color: #333;
+            --border-radius: 8px;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+        }
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        button:active {
+            transform: translateY(1px);
+        }
+        #aggiungiButton {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        #micButton {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        #micButton.listening {
+            background-color: #e74c3c;
+        }
+        #statusMessage {
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background-color: #e8f5e9;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 2rem;
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        th:first-child {
+            border-top-left-radius: var(--border-radius);
+        }
+        th:last-child {
+            border-top-right-radius: var(--border-radius);
+        }
+        tr:last-child td:first-child {
+            border-bottom-left-radius: var(--border-radius);
+        }
+        tr:last-child td:last-child {
+            border-bottom-right-radius: var(--border-radius);
+        }
+        .edit-btn, .save-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .cancel-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Gestione Clienti</h1>
-        <div>
+        <div class="input-group">
             <input type="text" id="nome" placeholder="Nome">
             <input type="text" id="prodotto" placeholder="Prodotto">
             <input type="text" id="citta" placeholder="Città">
+        </div>
+        <div class="input-group">
             <button id="aggiungiButton">Aggiungi Cliente</button>
-            <button id="micButton" class="mic-button">🎤 Attiva/Disattiva Vocale</button>
+            <button id="micButton">🎤 Attiva/Disattiva Vocale</button>
         </div>
         <div id="statusMessage"></div>
         <table>
@@ -41,6 +138,7 @@
     </div>
 
     <script>
+        // Lo script JavaScript rimane lo stesso del codice precedente
         let clienti = [];
         let recognition;
         let isListening = false;
@@ -79,23 +177,19 @@
             let dati = {};
             let campoCorrente = null;
             
-            // Dividi il transcript in parole
             const parole = transcript.split(' ');
             
             for (let i = 0; i < parole.length; i++) {
                 const parola = parole[i].toLowerCase();
                 
-                // Controlla se la parola è una parola chiave
                 if (paroleChiave.includes(parola)) {
                     campoCorrente = parola === 'città' ? 'citta' : parola;
                     dati[campoCorrente] = '';
                 } else if (campoCorrente) {
-                    // Aggiungi la parola al campo corrente
                     dati[campoCorrente] += (dati[campoCorrente] ? ' ' : '') + parole[i];
                 }
             }
 
-            // Rimuovi eventuali spazi extra e virgole alla fine
             for (let campo in dati) {
                 dati[campo] = dati[campo].trim().replace(/,$/, '');
             }
@@ -164,7 +258,7 @@
                     <td>${cliente.citta}</td>
                     <td>
                         <button class="edit-btn" onclick="modificaCliente(${index})">Modifica</button>
-                        <button onclick="rimuoviCliente(${index})">Elimina</button>
+                        <button class="cancel-btn" onclick="rimuoviCliente(${index})">Elimina</button>
                     </td>
                 `;
             });
