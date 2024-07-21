@@ -317,9 +317,11 @@
         function copiaNegliAppunti() {
             let tabella = document.querySelector('table');
             let righe = Array.from(tabella.rows);
-            let testoDaCopiare = righe.map(riga => {
+            // Salta la prima riga (i titoli delle colonne)
+            let testoDaCopiare = righe.slice(1).map(riga => {
                 let celle = Array.from(riga.cells);
-                return celle.map(cell => cell.innerText).join('\t');
+                // Escludi l'ultima cella (i pulsanti di azione)
+                return celle.slice(0, -1).map(cell => cell.innerText).join('\t');
             }).join('\n');
 
             navigator.clipboard.writeText(testoDaCopiare).then(() => {
