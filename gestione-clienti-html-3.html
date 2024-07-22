@@ -123,7 +123,7 @@
         <div class="input-group">
             <button id="aggiungiButton">Aggiungi Cliente</button>
             <button id="micButton">🎤 Attiva/Disattiva Vocale</button>
-            <button id="copiaButton">Copia negli appunti</button> <!-- Aggiungi il pulsante "Copia negli appunti" -->
+            <button id="copiaButton">Copia negli appunti</button>
         </div>
         <div id="statusMessage"></div>
         <table>
@@ -243,6 +243,7 @@
                 aggiornaTabella();
                 pulisciCampi();
                 updateStatus("Cliente aggiunto con successo!");
+                salvaClienti(); // Salva i clienti nel localStorage
             } else {
                 updateStatus("Per favore, compila tutti i campi.");
             }
@@ -269,6 +270,7 @@
             clienti.splice(index, 1);
             aggiornaTabella();
             updateStatus("Cliente rimosso con successo!");
+            salvaClienti(); // Salva i clienti nel localStorage
         }
 
         function modificaCliente(index) {
@@ -294,6 +296,7 @@
                 clienti[index] = {nome, prodotto, citta};
                 aggiornaTabella();
                 updateStatus("Cliente modificato con successo!");
+                salvaClienti(); // Salva i clienti nel localStorage
             } else {
                 updateStatus("Per favore, compila tutti i campi.");
             }
@@ -332,12 +335,24 @@
             });
         }
 
+        function salvaClienti() {
+            localStorage.setItem('clienti', JSON.stringify(clienti));
+        }
+
+        function caricaClienti() {
+            const clientiSalvati = localStorage.getItem('clienti');
+            if (clientiSalvati) {
+                clienti = JSON.parse(clientiSalvati);
+                aggiornaTabella();
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             initSpeechRecognition();
             document.getElementById('aggiungiButton').addEventListener('click', aggiungiCliente);
             document.getElementById('micButton').addEventListener('click', toggleListening);
             document.getElementById('copiaButton').addEventListener('click', copiaNegliAppunti); // Aggiungi l'evento click per il pulsante "Copia negli appunti"
-            aggiornaTabella();
+            caricaClienti(); // Carica i clienti dal localStorage
         });
     </script>
 </body>
