@@ -238,14 +238,14 @@
             const prodotto = document.getElementById('prodotto').value;
             const citta = document.getElementById('citta').value;
             
-            if (nome && prodotto && citta) {
+            if (nome && prodotto) { // Modifica qui
                 clienti.push({nome, prodotto, citta});
                 aggiornaTabella();
                 pulisciCampi();
                 updateStatus("Cliente aggiunto con successo!");
                 salvaClienti(); // Salva i clienti nel localStorage
             } else {
-                updateStatus("Per favore, compila tutti i campi.");
+                updateStatus("Per favore, compila almeno i campi Nome e Prodotto.");
             }
         }
 
@@ -257,7 +257,7 @@
                 row.innerHTML = `
                     <td>${cliente.nome}</td>
                     <td>${cliente.prodotto}</td>
-                    <td>${cliente.citta}</td>
+                    <td>${cliente.citta || ''}</td>
                     <td>
                         <button class="edit-btn" onclick="modificaCliente(${index})">Modifica</button>
                         <button class="cancel-btn" onclick="rimuoviCliente(${index})">Elimina</button>
@@ -292,13 +292,13 @@
             const prodotto = document.getElementById(`edit-prodotto-${index}`).value;
             const citta = document.getElementById(`edit-citta-${index}`).value;
             
-            if (nome && prodotto && citta) {
+            if (nome && prodotto) { // Modifica qui
                 clienti[index] = {nome, prodotto, citta};
                 aggiornaTabella();
                 updateStatus("Cliente modificato con successo!");
                 salvaClienti(); // Salva i clienti nel localStorage
             } else {
-                updateStatus("Per favore, compila tutti i campi.");
+                updateStatus("Per favore, compila almeno i campi Nome e Prodotto.");
             }
         }
 
