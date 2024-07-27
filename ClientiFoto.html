@@ -72,6 +72,10 @@
             background-color: var(--secondary-color);
             color: white;
         }
+        #copiaButton {
+            background-color: var(--primary-color);
+            color: white;
+        }
         #statusMessage {
             margin-top: 1rem;
             padding: 0.5rem;
@@ -129,7 +133,7 @@
             <button id="aggiungiButton">Aggiungi Cliente</button>
             <button id="micButton">🎤 Attiva/Disattiva Vocale</button>
             <button id="caricaDatiButton">Carica Dati dalla Foto</button>
-            <button id="copiaButton">Copia negli appunti</button>
+            <button id="copiaButton">Copia negli Appunti</button>
         </div>
         <div id="statusMessage"></div>
         <table>
@@ -250,17 +254,16 @@
                 clienti.push({ nome, prodotto, citta });
                 aggiornaTabella();
                 pulisciCampi();
-                updateStatus("Cliente aggiunto con successo!");
                 salvaClienti();
+                updateStatus("Cliente aggiunto con successo!");
             } else {
-                updateStatus("Per favore, compila almeno i campi Nome e Prodotto.");
+                updateStatus("Per favore, inserisci nome e prodotto.");
             }
         }
 
         function aggiornaTabella() {
             const tbody = document.getElementById('clientiBody');
             tbody.innerHTML = '';
-
             clienti.forEach((cliente, index) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -345,9 +348,14 @@
                     img.src = reader.result;
                     img.onload = async () => {
                         updateStatus("Riconoscimento del testo in corso...");
-                        const { data: { text } } = await Tesseract.recognize(img, 'ita');
-                        testoRiconosciuto = text;
-                        updateStatus("Testo riconosciuto. Premi 'Carica Dati dalla Foto' per inserire i dati.");
+                        try {
+                            const { data: { text } } = await Tesseract.recognize(img, 'ita');
+                            testoRiconosciuto = text;
+                            updateStatus("Testo riconosciuto. Premi 'Carica Dati dalla Foto' per inserire i dati.");
+                        } catch (error) {
+                            updateStatus("Errore nel riconoscimento del testo.");
+                            console.error("Errore nel riconoscimento del testo: ", error);
+                        }
                     };
                 };
                 reader.readAsDataURL(file);
