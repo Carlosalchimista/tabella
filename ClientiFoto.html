@@ -369,12 +369,14 @@
             let nome = '', prodotto = '', citta = '';
 
             for (const line of lines) {
-                if (line.toLowerCase().includes('nome')) {
-                    nome = line.split(':').pop().trim();
-                } else if (line.toLowerCase().includes('prodotto')) {
+                if (line.toLowerCase().includes('regione sociale')) {
+                    const info = line.split(':').pop().trim().split('\n');
+                    if (info.length >= 4) {
+                        nome = info[0].trim();
+                        citta = info[2].trim();
+                    }
+                } else if (line.toLowerCase().includes('descrizione')) {
                     prodotto = line.split(':').pop().trim();
-                } else if (line.toLowerCase().includes('città') || line.toLowerCase().includes('citta')) {
-                    citta = line.split(':').pop().trim();
                 }
             }
 
