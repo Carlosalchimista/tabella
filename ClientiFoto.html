@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Clienti - Moderna (Preview)</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5a623;
+            --background-color: #f0f4f8;
+            --text-color: #333;
+            --border-radius: 8px;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+        }
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        #aggiungiButton {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        #micButton {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        #statusMessage {
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background-color: #e8f5e9;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 2rem;
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        th:first-child {
+            border-top-left-radius: var(--border-radius);
+        }
+        th:last-child {
+            border-top-right-radius: var(--border-radius);
+        }
+        .edit-btn, .save-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .cancel-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gestione Clienti</h1>
+        <div class="input-group">
+            <input type="text" id="nome" placeholder="Nome">
+            <input type="text" id="prodotto" placeholder="Prodotto">
+            <input type="text" id="citta" placeholder="Città">
+            <input type="file" id="caricaFoto" accept="image/*">
+        </div>
+        <div class="input-group">
+            <button id="aggiungiButton">Aggiungi Cliente</button>
+            <button id="micButton">🎤 Attiva/Disattiva Vocale</button>
+            <button id="copiaButton">Copia negli appunti</button>
+        </div>
+        <div id="statusMessage">Benvenuto nel sistema di gestione clienti</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Prodotto</th>
+                    <th>Città</th>
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody id="clientiBody">
+                <tr>
+                    <td>Mario Rossi</td>
+                    <td>Laptop</td>
+                    <td>Roma</td>
+                    <td>
+                        <button class="edit-btn">Modifica</button>
+                        <button class="cancel-btn">Rimuovi</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Giulia Bianchi</td>
+                    <td>Smartphone</td>
+                    <td>Milano</td>
+                    <td>
+                        <button class="edit-btn">Modifica</button>
+                        <button class="cancel-btn">Rimuovi</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
