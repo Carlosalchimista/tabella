@@ -68,6 +68,10 @@
         #micButton.listening {
             background-color: #e74c3c;
         }
+        #caricaDatiButton {
+            background-color: var(--secondary-color);
+            color: white;
+        }
         #statusMessage {
             margin-top: 1rem;
             padding: 0.5rem;
@@ -124,6 +128,7 @@
         <div class="input-group">
             <button id="aggiungiButton">Aggiungi Cliente</button>
             <button id="micButton">🎤 Attiva/Disattiva Vocale</button>
+            <button id="caricaDatiButton">Carica Dati dalla Foto</button>
             <button id="copiaButton">Copia negli appunti</button>
         </div>
         <div id="statusMessage"></div>
@@ -145,6 +150,7 @@
         let clienti = [];
         let recognition;
         let isListening = false;
+        let testoRiconosciuto = '';
 
         function initSpeechRecognition() {
             if ('webkitSpeechRecognition' in window) {
@@ -260,7 +266,7 @@
                 row.innerHTML = `
                     <td>${cliente.nome}</td>
                     <td>${cliente.prodotto}</td>
-                    <td>${cliente.citta || ''}</td>
+                    <td>${cliente.citta}</td>
                     <td>
                         <button class="edit-btn" onclick="modificaCliente(${index})">Modifica</button>
                         <button class="cancel-btn" onclick="rimuoviCliente(${index})">Rimuovi</button>
@@ -308,8 +314,28 @@
             rimuoviCliente(index);
         }
 
+        function copiaNegliAppunti() {
+            const datiClienti = clienti.map(cliente => `${cliente.nome}\t${cliente.prodotto}\t${cliente.citta}`).join('\n');
+            navigator.clipboard.writeText(datiClienti).then(() => {
+                updateStatus("Dati copiati negli appunti!");
+            }).catch(err => {
+                console.error("Errore nel copiare i dati: ", err);
+                updateStatus("Errore nel copiare i dati.");
+            });
+        }
+
+        function caricaDatiDallaFoto() {
+            if (testoRiconosciuto) {
+                processRecognizedText(testoRiconosciuto);
+            } else {
+                updateStatus("Per favore, carica prima una foto.");
+            }
+        }
+
         document.getElementById('aggiungiButton').addEventListener('click', aggiungiCliente);
         document.getElementById('micButton').addEventListener('click', toggleListening);
+        document.getElementById('copiaButton').addEventListener('click', copiaNegliAppunti);
+        document.getElementById('caricaDatiButton').addEventListener('click', caricaDatiDallaFoto);
         document.getElementById('caricaFoto').addEventListener('change', async (event) => {
             const file = event.target.files[0];
             if (file) {
@@ -320,7 +346,8 @@
                     img.onload = async () => {
                         updateStatus("Riconoscimento del testo in corso...");
                         const { data: { text } } = await Tesseract.recognize(img, 'ita');
-                        processRecognizedText(text);
+                        testoRiconosciuto = text;
+                        updateStatus("Testo riconosciuto. Premi 'Carica Dati dalla Foto' per inserire i dati.");
                     };
                 };
                 reader.readAsDataURL(file);
