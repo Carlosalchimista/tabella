@@ -3,137 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prenotazione Appuntamenti</title>
+    <title>Gestione dei Soldi</title>
     <style>
-        :root {
-            --primary-color: #4a90e2;
-            --background-color: #f0f4f8;
-            --text-color: #333;
-            --border-radius: 8px;
-        }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: var(--background-color);
-            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            margin: 20px;
         }
-
         .container {
-            max-width: 600px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background-color: white;
-            border-radius: var(--border-radius);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-
-        h1 {
-            color: var(--primary-color);
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .input-group {
-            margin-bottom: 1rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-        }
-
-        input {
+        .box {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 10px;
             width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ddd;
-            border-radius: var(--border-radius);
-            font-size: 1rem;
+            max-width: 300px;
+            box-sizing: border-box;
         }
-
+        .result {
+            margin: 20px 0;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
         button {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: var(--border-radius);
-            font-size: 1rem;
-            cursor: pointer;
-            background-color: var(--primary-color);
+            background-color: #4CAF50;
             color: white;
-            transition: background-color 0.3s;
+            border: none;
+            cursor: pointer;
         }
-
         button:hover {
-            background-color: #357ABD;
-        }
-
-        #statusMessage {
-            margin-top: 1rem;
-            padding: 0.5rem;
-            background-color: #e8f5e9;
-            border-radius: var(--border-radius);
-            text-align: center;
-        }
-
-        ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        li {
-            padding: 0.5rem;
-            border-bottom: 1px solid #ddd;
+            background-color: #45a049;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Prenota un Appuntamento</h1>
-        <div class="input-group">
-            <label for="name">Nome:</label>
-            <input type="text" id="name" placeholder="Il tuo nome">
+        <h1>Gestione dei Soldi</h1>
+        <div class="box">
+            <label for="entrate">Tot. Entrate:</label>
+            <input type="number" id="entrate" placeholder="Inserisci entrate totali">
+            <label for="spese">Tot. Spese:</label>
+            <input type="number" id="spese" placeholder="Inserisci spese totali">
+            <button type="button" onclick="calcolaSaldo()">Calcola</button>
         </div>
-        <div class="input-group">
-            <label for="date">Data:</label>
-            <input type="date" id="date">
+        <div class="box result">
+            <h2>Risultato</h2>
+            <p>Saldo: <span id="saldo"></span></p>
+            <h3>Gestione con la regola del risparmio:</h3>
+            <p>50% - Spese necessarie del mese: <span id="necessarie"></span></p>
+            <p>30% - Risparmi, obiettivi, investimenti: <span id="risparmi"></span></p>
+            <p>20% - Spese personali, svago e passatempi: <span id="personali"></span></p>
         </div>
-        <div class="input-group">
-            <label for="time">Orario:</label>
-            <input type="time" id="time">
-        </div>
-        <button id="bookButton">Prenota Appuntamento</button>
-        <div id="statusMessage"></div>
-        <h2>Appuntamenti Prenotati</h2>
-        <ul id="appointmentsList"></ul>
     </div>
+
     <script>
-        document.getElementById('bookButton').addEventListener('click', function() {
-            const name = document.getElementById('name').value.trim();
-            const date = document.getElementById('date').value;
-            const time = document.getElementById('time').value;
+        function calcolaSaldo() {
+            const entrate = parseFloat(document.getElementById('entrate').value) || 0;
+            const spese = parseFloat(document.getElementById('spese').value) || 0;
+            const saldo = entrate - spese;
 
-            if (name && date && time) {
-                const appointment = `${name} - ${date} ${time}`;
-                const appointmentsList = document.getElementById('appointmentsList');
-                const li = document.createElement('li');
-                li.textContent = appointment;
-                appointmentsList.appendChild(li);
+            document.getElementById('saldo').textContent = saldo.toFixed(2) + ' €';
 
-                updateStatus(`Appuntamento prenotato per ${appointment}.`);
-                clearFields();
-            } else {
-                updateStatus('Per favore, compila tutti i campi.');
-            }
-        });
+            const necessarie = saldo * 0.50;
+            const risparmi = saldo * 0.30;
+            const personali = saldo * 0.20;
 
-        function updateStatus(message) {
-            document.getElementById('statusMessage').textContent = message;
-        }
-
-        function clearFields() {
-            document.getElementById('name').value = '';
-            document.getElementById('date').value = '';
-            document.getElementById('time').value = '';
+            document.getElementById('necessarie').textContent = necessarie.toFixed(2) + ' €';
+            document.getElementById('risparmi').textContent = risparmi.toFixed(2) + ' €';
+            document.getElementById('personali').textContent = personali.toFixed(2) + ' €';
         }
     </script>
 </body>
