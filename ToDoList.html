@@ -67,14 +67,19 @@
             color: gray;
         }
 
-        li button {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            cursor: pointer;
+        .check-button {
+            background-color: #28a745;
         }
 
-        li button:hover {
+        .check-button:hover {
+            background-color: #218838;
+        }
+
+        .delete-button {
+            background-color: #dc3545;
+        }
+
+        .delete-button:hover {
             background-color: #c82333;
         }
     </style>
@@ -85,6 +90,7 @@
         <input type="text" id="taskInput" placeholder="Aggiungi una nuova attività...">
         <button id="addTaskBtn">Aggiungi</button>
         <button id="voiceInputBtn">🎤 Inserimento vocale</button>
+        <button id="stopVoiceBtn" style="display: none;">🛑 Stop</button>
         <ul id="taskList"></ul>
     </div>
     <script>
@@ -92,6 +98,7 @@
             const taskInput = document.getElementById('taskInput');
             const addTaskBtn = document.getElementById('addTaskBtn');
             const voiceInputBtn = document.getElementById('voiceInputBtn');
+            const stopVoiceBtn = document.getElementById('stopVoiceBtn');
             const taskList = document.getElementById('taskList');
 
             let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
@@ -104,8 +111,8 @@
                     li.innerHTML = `
                         <span>${task.text}</span>
                         <div>
-                            <button onclick="toggleTask(${index})">✔️</button>
-                            <button onclick="deleteTask(${index})">🗑️</button>
+                            <button class="check-button" onclick="toggleTask(${index})">✔️</button>
+                            <button class="delete-button" onclick="deleteTask(${index})">🗑️</button>
                         </div>
                     `;
                     taskList.appendChild(li);
@@ -132,8 +139,13 @@
                 renderTasks();
             };
 
+            let recognition;
             const handleVoiceInput = () => {
-                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                if (!('webkitSpeechRecognition' in window)) {
+                    alert('Il riconoscimento vocale non è supportato su questo browser.');
+                    return;
+                }
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
                 recognition.lang = 'it-IT';
                 recognition.start();
                 recognition.onresult = (event) => {
@@ -147,10 +159,21 @@
                 recognition.onend = () => {
                     console.log('Speech recognition service disconnected');
                 };
+                voiceInputBtn.style.display = 'none';
+                stopVoiceBtn.style.display = 'inline-block';
+            };
+
+            const stopVoiceInput = () => {
+                if (recognition) {
+                    recognition.stop();
+                }
+                voiceInputBtn.style.display = 'inline-block';
+                stopVoiceBtn.style.display = 'none';
             };
 
             addTaskBtn.addEventListener('click', () => addTask(taskInput.value));
             voiceInputBtn.addEventListener('click', handleVoiceInput);
+            stopVoiceBtn.addEventListener('click', stopVoiceInput);
 
             renderTasks();
         });
@@ -180,8 +203,8 @@
                 li.innerHTML = `
                     <span>${task.text}</span>
                     <div>
-                        <button onclick="toggleTask(${index})">✔️</button>
-                        <button onclick="deleteTask(${index})">🗑️</button>
+                        <button class="check-button" onclick="toggleTask(${index})">✔️</button>
+                        <button class="delete-button" onclick="deleteTask(${index})">🗑️</button>
                     </div>
                 `;
                 taskList.appendChild(li);
