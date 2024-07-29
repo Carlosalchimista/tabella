@@ -145,12 +145,11 @@
                     alert('Il riconoscimento vocale non è supportato su questo browser.');
                     return;
                 }
-                if (recognition && recognition.recognizing) {
-                    recognition.stop(); // Stop any ongoing recognition
+                if (recognition && recognition.abort) {
+                    recognition.abort(); // Ferma qualsiasi riconoscimento in corso
                 }
                 recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
                 recognition.lang = 'it-IT';
-                recognition.start();
                 recognition.onresult = (event) => {
                     const voiceInput = event.results[0][0].transcript;
                     console.log('Voice input:', voiceInput);
@@ -161,7 +160,13 @@
                 };
                 recognition.onend = () => {
                     console.log('Speech recognition service disconnected');
+                    if (recognition) {
+                        recognition = null; // Reset dell'oggetto recognition
+                        voiceInputBtn.style.display = 'inline-block';
+                        stopVoiceBtn.style.display = 'none';
+                    }
                 };
+                recognition.start();
                 voiceInputBtn.style.display = 'none';
                 stopVoiceBtn.style.display = 'inline-block';
             };
@@ -169,10 +174,12 @@
             const stopVoiceInput = () => {
                 if (recognition) {
                     recognition.stop();
-                    recognition = null; // Reset the recognition object
+                    recognition.onend = () => {
+                        recognition = null; // Reset dell'oggetto recognition
+                        voiceInputBtn.style.display = 'inline-block';
+                        stopVoiceBtn.style.display = 'none';
+                    };
                 }
-                voiceInputBtn.style.display = 'inline-block';
-                stopVoiceBtn.style.display = 'none';
             };
 
             addTaskBtn.addEventListener('click', () => addTask(taskInput.value));
