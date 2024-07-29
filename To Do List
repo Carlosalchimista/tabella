@@ -1,0 +1,89 @@
+import React, { useState, useEffect } from 'react';
+
+const TodoList = () => {
+  const [tasks, setTasks] = useState([]);
+  const [newTask, setNewTask] = useState('');
+
+  useEffect(() => {
+    setTasks([
+      { text: 'Fare la spesa', done: false },
+      { text: 'Chiamare il dottore', done: true },
+      { text: 'Studiare React', done: false },
+    ]);
+  }, []);
+
+  const addTask = () => {
+    if (newTask.trim()) {
+      setTasks([...tasks, { text: newTask, done: false }]);
+      setNewTask('');
+    }
+  };
+
+  const toggleTask = (index) => {
+    const updatedTasks = [...tasks];
+    updatedTasks[index].done = !updatedTasks[index].done;
+    setTasks(updatedTasks);
+  };
+
+  const deleteTask = (index) => {
+    const updatedTasks = tasks.filter((_, i) => i !== index);
+    setTasks(updatedTasks);
+  };
+
+  return (
+    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-md">
+        <h1 className="text-2xl font-bold text-center text-gray-800 mb-4">Lista delle cose da fare</h1>
+        <div className="flex mb-4">
+          <input
+            type="text"
+            className="flex-grow p-2 border border-gray-300 rounded-l-md"
+            placeholder="Aggiungi una nuova attività..."
+            value={newTask}
+            onChange={(e) => setNewTask(e.target.value)}
+          />
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-600"
+            onClick={addTask}
+          >
+            Aggiungi
+          </button>
+        </div>
+        <button 
+          className="w-full bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 mb-4"
+          onClick={() => alert('Funzionalità di inserimento vocale non disponibile in questa preview.')}
+        >
+          🎤 Inserimento vocale
+        </button>
+        <ul>
+          {tasks.map((task, index) => (
+            <li
+              key={index}
+              className={`flex justify-between items-center p-2 border-b ${
+                task.done ? 'line-through text-gray-500' : ''
+              }`}
+            >
+              <span>{task.text}</span>
+              <div>
+                <button
+                  className="bg-green-500 text-white px-2 py-1 rounded mr-2 hover:bg-green-600"
+                  onClick={() => toggleTask(index)}
+                >
+                  ✔️
+                </button>
+                <button
+                  className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                  onClick={() => deleteTask(index)}
+                >
+                  🗑️
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
+
+export default TodoList;
