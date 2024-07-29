@@ -145,6 +145,9 @@
                     alert('Il riconoscimento vocale non è supportato su questo browser.');
                     return;
                 }
+                if (recognition && recognition.recognizing) {
+                    recognition.stop(); // Stop any ongoing recognition
+                }
                 recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
                 recognition.lang = 'it-IT';
                 recognition.start();
