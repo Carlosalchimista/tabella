@@ -82,6 +82,14 @@
         .delete-button:hover {
             background-color: #c82333;
         }
+
+        .examples {
+            margin: 20px 0;
+        }
+
+        #voiceFeedback {
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
@@ -92,6 +100,25 @@
         <button id="voiceInputBtn">🎤 Inserimento vocale</button>
         <button id="stopVoiceBtn" style="display: none;">🛑 Stop</button>
         <ul id="taskList"></ul>
+        
+        <!-- Esempi di comandi vocali -->
+        <div class="examples">
+            <h2>Esempi di comandi vocali:</h2>
+            <ul>
+                <li>Per aggiungere un nome del cliente: <b>Nome: Mario Rossi</b></li>
+                <li>Per aggiungere un numero di telefono: <b>Telefono: 1234567890</b></li>
+                <li>Per aggiungere un indirizzo: <b>Indirizzo: Via Roma 123</b></li>
+                <li>Per aggiungere un intervento: <b>Intervento: Riparazione lavatrice</b></li>
+            </ul>
+        </div>
+
+        <!-- Feedback di input vocale -->
+        <div id="voiceFeedback" style="display:none;">
+            <p><b>Input riconosciuto:</b></p>
+            <p id="recognizedText"></p>
+            <button id="confirmInput">Conferma</button>
+            <button id="editInput">Modifica</button>
+        </div>
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -100,6 +127,10 @@
             const voiceInputBtn = document.getElementById('voiceInputBtn');
             const stopVoiceBtn = document.getElementById('stopVoiceBtn');
             const taskList = document.getElementById('taskList');
+            const voiceFeedback = document.getElementById('voiceFeedback');
+            const recognizedText = document.getElementById('recognizedText');
+            const confirmInput = document.getElementById('confirmInput');
+            const editInput = document.getElementById('editInput');
 
             let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
             let recognition = null;
@@ -155,7 +186,7 @@
                 for (const [category, words] of Object.entries(keywords)) {
                     for (const word of words) {
                         if (text.includes(word)) {
-                            task.text = `${category.charAt(0).toUpperCase() + category.slice(1)}: ${text}`;
+                            task.text = `${category.charAt(0).toUpperCase() + category.slice(1)}: ${text.replace(word, '').trim()}`;
                             break;
                         }
                     }
@@ -178,13 +209,15 @@
                     const voiceInput = event.results[0][0].transcript.toLowerCase();
                     console.log('Voice input:', voiceInput);
                     const task = analyzeVoiceInput(voiceInput);
-                    addTask(task.text);
+                    recognizedText.textContent = task.text;
+                    voiceFeedback.style.display = 'block';
                 };
                 recognition.onerror = (event) => {
-                    console.error('Speech recognition error', event.error);
+                    console.error('Errore di riconoscimento vocale', event.error);
+                    alert('Impossibile riconoscere l\'input. Per favore, riprova utilizzando uno dei formati suggeriti.');
                 };
                 recognition.onend = () => {
-                    console.log('Speech recognition service disconnected');
+                    console.log('Servizio di riconoscimento vocale disconnesso');
                     if (recognition) {
                         recognition = null; // Reset dell'oggetto recognition
                         voiceInputBtn.style.display = 'inline-block';
@@ -206,6 +239,16 @@
                     };
                 }
             };
+
+            confirmInput.addEventListener('click', () => {
+                addTask(recognizedText.textContent);
+                voiceFeedback.style.display = 'none';
+            });
+
+            editInput.addEventListener('click', () => {
+                taskInput.value = recognizedText.textContent;
+                voiceFeedback.style.display = 'none';
+            });
 
             addTaskBtn.addEventListener('click', () => addTask(taskInput.value));
             voiceInputBtn.addEventListener('click', handleVoiceInput);
