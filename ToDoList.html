@@ -139,13 +139,12 @@
                 renderTasks();
             };
 
-            let recognition;
             const handleVoiceInput = () => {
                 if (!('webkitSpeechRecognition' in window)) {
                     alert('Il riconoscimento vocale non è supportato su questo browser.');
                     return;
                 }
-                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
                 recognition.lang = 'it-IT';
                 recognition.start();
                 recognition.onresult = (event) => {
@@ -164,8 +163,8 @@
             };
 
             const stopVoiceInput = () => {
-                if (recognition) {
-                    recognition.stop();
+                if (window.recognition) {
+                    window.recognition.stop();
                 }
                 voiceInputBtn.style.display = 'inline-block';
                 stopVoiceBtn.style.display = 'none';
@@ -176,42 +175,11 @@
             stopVoiceBtn.addEventListener('click', stopVoiceInput);
 
             renderTasks();
+
+            // Make functions globally accessible for HTML to use them
+            window.toggleTask = toggleTask;
+            window.deleteTask = deleteTask;
         });
-
-        // Make functions globally accessible for HTML to use them
-        window.toggleTask = (index) => {
-            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-            tasks[index].done = !tasks[index].done;
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-            renderTasks();
-        };
-
-        window.deleteTask = (index) => {
-            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-            tasks.splice(index, 1);
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-            renderTasks();
-        };
-
-        const renderTasks = () => {
-            const taskList = document.getElementById('taskList');
-            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-            taskList.innerHTML = '';
-            tasks.forEach((task, index) => {
-                const li = document.createElement('li');
-                li.className = task.done ? 'done' : '';
-                li.innerHTML = `
-                    <span>${task.text}</span>
-                    <div>
-                        <button class="check-button" onclick="toggleTask(${index})">✔️</button>
-                        <button class="delete-button" onclick="deleteTask(${index})">🗑️</button>
-                    </div>
-                `;
-                taskList.appendChild(li);
-            });
-        };
-
-        renderTasks();
     </script>
 </body>
 </html>
