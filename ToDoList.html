@@ -102,6 +102,7 @@
             const taskList = document.getElementById('taskList');
 
             let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            let recognition = null;
 
             const renderTasks = () => {
                 taskList.innerHTML = '';
@@ -144,7 +145,7 @@
                     alert('Il riconoscimento vocale non è supportato su questo browser.');
                     return;
                 }
-                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
                 recognition.lang = 'it-IT';
                 recognition.start();
                 recognition.onresult = (event) => {
@@ -163,8 +164,9 @@
             };
 
             const stopVoiceInput = () => {
-                if (window.recognition) {
-                    window.recognition.stop();
+                if (recognition) {
+                    recognition.stop();
+                    recognition = null; // Reset the recognition object
                 }
                 voiceInputBtn.style.display = 'inline-block';
                 stopVoiceBtn.style.display = 'none';
@@ -174,11 +176,11 @@
             voiceInputBtn.addEventListener('click', handleVoiceInput);
             stopVoiceBtn.addEventListener('click', stopVoiceInput);
 
-            renderTasks();
-
             // Make functions globally accessible for HTML to use them
             window.toggleTask = toggleTask;
             window.deleteTask = deleteTask;
+
+            renderTasks();
         });
     </script>
 </body>
